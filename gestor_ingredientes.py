@@ -1,6 +1,6 @@
 import requests
 import json
-from clasesperrosprueba import Ingrediente
+
 
 # ----------------------------------------------------------------------
 # 2. Modulo de Gestión de Ingredientes (Módulos)
