@@ -1,36 +1,33 @@
 import matplotlib as plt
 import random
 import json
+from gestor_ingredientes import *
 
 
-class SimuladorVentas:
-    """
-    Módulo para simular un día de ventas y reportar estadísticas (Módulos 4 y 5).
-    """
-    def __init__(self):
-        self._historial_simulaciones = [] 
-        self._datos_locales_ruta = "datos_locales_simulacion.json"
 
     # Métodos de Persistencia
-    def cargar_datos_locales(self):
+def cargar_datos_locales():
         try:
-            with open(self._datos_locales_ruta, 'r', encoding='utf-8') as f:
-                self._historial_simulaciones = json.load(f)
-                print(f"✅ Historial de {len(self._historial_simulaciones)} días de simulación cargado.")
+            with open(datos_locales_ruta, 'r', encoding='utf-8') as f:
+                historial_simulaciones = json.load(f)
+                print(f"✅ Historial de {len(historial_simulaciones)} días de simulación cargado.")
         except FileNotFoundError:
             print("ℹ️ No se encontró historial de simulación.")
         except json.JSONDecodeError:
             print("❌ Error al decodificar el archivo JSON de simulación.")
+            return historial_simulaciones
+        
+historial_simulaciones =cargar_datos_locales()
 
-    def guardar_datos_locales(self):
+def guardar_datos_locales():
         try:
-            with open(self._datos_locales_ruta, 'w', encoding='utf-8') as f:
-                json.dump(self._historial_simulaciones, f, indent=4)
+            with open(datos_locales_ruta, 'w', encoding='utf-8') as f:
+                json.dump(historial_simulaciones, f, indent=4)
         except Exception as e:
             print(f"❌ Error al guardar historial de simulación: {e}")
             
     # Métodos de Simulación
-    def simular_dia(self, gestor_menu, gestor_inventario, gestor_ingredientes):
+def simular_dia(gestor_menu, gestor_inventario, gestor_ingredientes):
         """Simula un día de ventas completo y actualiza el inventario."""
         menu = gestor_menu.get_menu()
         if not menu:
@@ -116,15 +113,15 @@ class SimuladorVentas:
                 ingredientes_que_causaron_marcha.append(ingrediente_faltante)
 
         # --- Reporte Final del Día ---
-        self._registrar_resultados(
+        registrar_resultados(
             clientes_totales, clientes_cambiaron_opinion, clientes_no_pudieron_comprar,
             total_hotdogs_vendidos, ventas_dia, hotdogs_que_causaron_marcha, 
             ingredientes_que_causaron_marcha, acompanantes_vendidos
         )
         
-        self.reportar_resultados()
+        reportar_resultados()
         
-    def _registrar_resultados(self, clientes_totales, clientes_cambiaron_opinion, clientes_no_pudieron_comprar, total_hotdogs_vendidos, ventas_dia, hotdogs_que_causaron_marcha, ingredientes_que_causaron_marcha, acompanantes_vendidos):
+def registrar_resultados(clientes_totales, clientes_cambiaron_opinion, clientes_no_pudieron_comprar, total_hotdogs_vendidos, ventas_dia, hotdogs_que_causaron_marcha, ingredientes_que_causaron_marcha, acompanantes_vendidos):
         """Almacena los resultados del día en el historial."""
         
         hotdog_mas_vendido = max(ventas_dia, key=ventas_dia.get) if ventas_dia else "N/A"
@@ -141,16 +138,16 @@ class SimuladorVentas:
             "acompanantes_vendidos": acompanantes_vendidos
         }
         
-        self._historial_simulaciones.append(resultados_dia)
-        self.guardar_datos_locales()
+        historial_simulaciones.append(resultados_dia)
+        guardar_datos_locales()
 
-    def reportar_resultados(self):
+def reportar_resultados():
         """Imprime las estadísticas del último día simulado."""
-        if not self._historial_simulaciones:
+        if not historial_simulaciones:
             print("No hay simulaciones para reportar.")
             return
 
-        resultados = self._historial_simulaciones[-1]
+        resultados = historial_simulaciones[-1]
         
         print("\n--- REPORTE FINAL DEL DÍA SIMULADO ---")
         print(f"Total de Clientes: {resultados['clientes_totales']}") 
@@ -165,21 +162,21 @@ class SimuladorVentas:
         print(f"Hot Dogs que causaron que el cliente se marchara: {', '.join(resultados['hotdogs_que_causaron_marcha'])}") 
         print(f"Ingredientes que causaron que el cliente se marchara: {', '.join(resultados['ingredientes_que_causaron_marcha'])}")
 
-    def mostrar_estadisticas_historicas(self):
+def mostrar_estadisticas_historicas():
         """Muestra gráficas de las métricas clave de la simulación histórica (Bono)."""
-        if len(self._historial_simulaciones) < 2:
+        if len(historial_simulaciones) < 2:
             print("⚠️ El módulo de estadísticas requiere al menos 2 días de simulación para generar gráficas.")
             return
 
         print("\n--- Generando Gráficas Históricas (Bono) ---")
         
-        dias = range(1, len(self._historial_simulaciones) + 1)
+        dias = range(1, len(historial_simulaciones) + 1)
         
-        clientes_totales = [d['clientes_totales'] for d in self._historial_simulaciones]
-        hotdogs_vendidos = [d['total_hotdogs_vendidos'] for d in self._historial_simulaciones]
-        clientes_no_pudieron_comprar = [d['clientes_no_pudieron_comprar'] for d in self._historial_simulaciones]
-        acompanantes_vendidos = [d['acompanantes_vendidos'] for d in self._historial_simulaciones]
-        promedio_por_cliente = [d['promedio_hotdogs_por_cliente'] for d in self._historial_simulaciones]
+        clientes_totales = [d['clientes_totales'] for d in historial_simulaciones]
+        hotdogs_vendidos = [d['total_hotdogs_vendidos'] for d in historial_simulaciones]
+        clientes_no_pudieron_comprar = [d['clientes_no_pudieron_comprar'] for d in historial_simulaciones]
+        acompanantes_vendidos = [d['acompanantes_vendidos'] for d in historial_simulaciones]
+        promedio_por_cliente = [d['promedio_hotdogs_por_cliente'] for d in historial_simulaciones]
 
         fig, axs = plt.subplots(2, 2, figsize=(12, 10))
         fig.suptitle('Estadísticas Históricas de Ventas de Hot Dog CCS', fontsize=16)
