@@ -1,25 +1,36 @@
-import json
-import random
-
-
 # ----------------------------------------------------------------------
-# 1. Clases de Entidad (Datos del Hot Dog)
+# 1. Clases de Entidad (Datos del Ingrediente)
 # ----------------------------------------------------------------------
 
 class Ingrediente:
     """Representa un ingrediente básico del sistema (Pan, Salchicha, Topping, etc.)."""
-    def __init__(self, categoria, nombre, tipo, tamaño, unidad):
+    def __init__(self, categoria, nombre):
         """Inicializa un Ingrediente."""
         # Atributos privados (-)
         self._categoria = categoria
         self._nombre = nombre
+
+    # Métodos públicos (+)
+    def __str__(self):
+        """Muestra los atributos del la clase."""
+        return {
+            "categoria": self._categoria,
+            "nombre": self._nombre,
+        }
+        
+    def get_categoria(self):
+        return self._categoria
+
+    
+class Pan(Ingrediente):
+    def __init__(self, categoria, nombre, tipo, tamaño, unidad):
+        super().__init__(categoria, nombre)
         self._tipo = tipo
         self._tamaño = tamaño
         self._unidad = unidad
-
-    # Métodos públicos (+)
-    def to_dict(self):
-        """Serializa el objeto a diccionario para guardarlo en JSON."""
+    
+    def __str__(self):
+        """SMuestra los atributos de la clase."""
         return {
             "categoria": self._categoria,
             "nombre": self._nombre,
@@ -27,13 +38,77 @@ class Ingrediente:
             "tamaño": self._tamaño,
             "unidad": self._unidad,
         }
-        
-    def get_categoria(self):
-        return self._categoria
-
+    
     def es_compatible(self, otro_ingrediente):
         """Valida la compatibilidad de este ingrediente con otro (ej: longitud de pan y salchicha).Retorna True si son compatibles."""
         # La compatibilidad es True si las longitudes son idénticas
         return self._tamaño == otro_ingrediente._tamaño
 
+class Salchicha(Ingrediente):
+    def __init__(self, categoria, nombre, tipo, tamaño, unidad):
+        super().__init__(categoria, nombre)
+        self._tipo = tipo
+        self._tamaño = tamaño
+        self._unidad = unidad
+    
+    def __str__(self):
+        """SMuestra los atributos de la clase."""
+        return {
+            "categoria": self._categoria,
+            "nombre": self._nombre,
+            "tipo": self._tipo,
+            "tamaño": self._tamaño,
+            "unidad": self._unidad,
+        }
+    
+    def es_compatible(self, otro_ingrediente):
+        """Valida la compatibilidad de este ingrediente con otro (ej: longitud de pan y salchicha).Retorna True si son compatibles."""
+        # La compatibilidad es True si las longitudes son idénticas
+        return self._tamaño == otro_ingrediente._tamaño
 
+class Acompañante(Ingrediente):
+    def __init__(self, categoria, nombre, tipo, tamaño, unidad):
+        super().__init__(categoria, nombre)
+        self._tipo = tipo
+        self._tamaño = tamaño
+        self._unidad = unidad
+    
+    def __str__(self):
+        """SMuestra los atributos de la clase."""
+        return {
+            "categoria": self._categoria,
+            "nombre": self._nombre,
+            "tipo": self._tipo,
+            "tamaño": self._tamaño,
+            "unidad": self._unidad,
+        }
+
+class Salsa(Ingrediente):
+    def __init__(self, categoria, nombre, base, color):
+        super().__init__(categoria, nombre)
+        self._base = base
+        self._color = color
+    
+    def __str__(self):
+        """SMuestra los atributos de la clase."""
+        return {
+            "categoria": self._categoria,
+            "nombre": self._nombre,
+            "base": self._base,
+            "color": self._color,
+        }
+
+class Topping(Ingrediente):
+    def __init__(self, categoria, nombre, tipo, presentacion):
+        super().__init__(categoria, nombre)
+        self._tipo = tipo
+        self._presentacion = presentacion
+    
+    def __str__(self):
+        """SMuestra los atributos de la clase."""
+        return {
+            "categoria": self._categoria,
+            "nombre": self._nombre,
+            "tipo": self._tipo,
+            "presentación": self._presentacion,
+        }

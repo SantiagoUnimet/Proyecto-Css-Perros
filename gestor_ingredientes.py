@@ -1,6 +1,6 @@
 import requests
 import json
-from ingredientes import Ingrediente
+from ingredientes import Pan, Salchicha, Acompañante, Salsa, Topping
 import pickle
 
 # ----------------------------------------------------------------------
@@ -13,26 +13,32 @@ import pickle
 def obtener_datos_inventario():
     """Descarga y carga los datos iniciales de la API de GitHub."""
     ingredientes_maestros = {}
-    #datos_locales_ruta = "datos_locales_ingredientes.json"
-    api_ingredientes = "https://raw.githubusercontent.com/FernandoSapient/BPTSP05_2526-1/refs/heads/main/ingredientes.json"
+
+    api_ingredientes = "https://raw.githubusercontent.com/FernandoSapient/BPTSP05_2526-1/69230a26300dd14e74d4afa599bfc33cfeab085b/ingredientes.json"
     response = requests.get(api_ingredientes)
 
     try:
         if response.status_code == 200:
             datos = response.json()
+            ingredientes = {}
             cont_ing = 0
-            for ing in datos:
-                for i in ing["Opciones"]:
-                    categoria = ing["Categoria"]
-                    nombre = ing["Opciones"][i]["nombre"]
-                    tipo = ing["Opciones"][i]["tipo"]
-                    tamaño = ing["Opciones"][i]["tamaño"]
-                    unidad = ing["Opciones"][i]["unidad"]
-
-                    ingredientes_maestros[categoria] = Ingrediente(categoria, nombre, tipo, tamaño, unidad)
+            for i in datos:
+                for j in i["Opciones"]:
+                    if i["Categoria"] == "Pan":
+                        nuevo_ingrediente = Pan(i["Categoria"], j["nombre"], j["tipo"], j["tamaño"], j["unidad"])
+                    elif i["Categoria"] == "Salchicha":
+                        nuevo_ingrediente = Salchicha(i["Categoria"], j["nombre"], j["tipo"], j["tamaño"], j["unidad"])
+                    elif i["Categoria"] == "Acompañante":
+                        nuevo_ingrediente = Acompañante(i["Categoria"], j["nombre"], j["tipo"], j["tamaño"], j["unidad"])
+                    elif i["Categoria"] == "Salsa":
+                        nuevo_ingrediente = Salsa(i["Categoria"], j["nombre"], j["base"], j["color"])
+                    else:
+                        nuevo_ingrediente = Topping(i["Categoria"], j["nombre"], j['tipo'], j["presentación"])
+                    ingredientes["Ing"] = nuevo_ingrediente
                     cont_ing += 1
             
             print(f"{cont_ing} ingredientes cargados desde la API.")
+            return ingredientes
         else:
             print(f"Error al conectar con la API. Código de estado: {response.status_code}")
         
@@ -44,7 +50,7 @@ def obtener_datos_inventario():
         return None
 
     
-def cargar_datos_inventario(archivo="inventario.txt"):
+def cargar_datos_inventario(archivo="inventario.json"):
     """Carga los ingredientes agregados por el usuario desde el JSON local."""
     try:
         with open(archivo, 'rb', encoding='utf-8') as a:
@@ -53,10 +59,10 @@ def cargar_datos_inventario(archivo="inventario.txt"):
         return []
 
 
-def guardar_datos_inventario(ingredientes, archivo="inventario.txt"):
+def guardar_datos_inventario(ingredientes, archivo="inventario.json"):
     """Guarda los ingredientes agregados localmente en un archivo JSON."""
     try:
-        with open(archivo, "rb") as a:
+        with open(archivo, "wb") as a:
             return pickle.dump(ingredientes, a)
     except Exception as e:
         print(f"Error al guardar datos locales: {e}")
@@ -71,6 +77,8 @@ if not ingredientes:
     if ing:
         ingredientes.append(ing)
         guardar_datos_inventario(ingredientes)
+
+
 
 
 
