@@ -1,4 +1,3 @@
-
 # Métodos de sub-menús (Ahora llaman a las funciones de listado para demostrar la funcionalidad)
 def manejar_gestion_ingredientes():
         print("\n[Módulo 1: Gestión de Ingredientes]")

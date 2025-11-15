@@ -1,15 +1,20 @@
+# ----------------------------------------------------------------------
+# 2. Clases de Entidad (Datos del Hot Dog)
+# ----------------------------------------------------------------------
+
 class HotDog:
-    """
-    Representa una opción de Hot Dog disponible en el menú.
-    """
-    def __init__(self, nombre, pan, salchicha, toppings, salsas, acompanante_combo=None):
+    """Representa una opción de Hot Dog disponible en el menú."""
+    def __init__(self, nombre, pan, salchicha, toppings, salsas, acompanante):
         # Atributos privados (-)
         self._nombre = nombre
         self._pan = pan
         self._salchicha = salchicha
         self._toppings = toppings
         self._salsas = salsas
-        self._acompanante_combo = acompanante_combo
+        self._acompanante = acompanante
+
+    def get_nombre(self):
+        return self._nombre
 
     def to_dict(self):
         """Serializa el objeto a diccionario para guardarlo en JSON."""
@@ -19,11 +24,10 @@ class HotDog:
             "salchicha": self._salchicha.get_nombre() if self._salchicha else None,
             "toppings": [t.get_nombre() for t in self._toppings if t],
             "salsas": [s.get_nombre() for s in self._salsas if s],
-            "acompanante_combo": self._acompanante_combo.get_nombre() if self._acompanante_combo else None,
+            "acompanante_combo": self._acompanante.get_nombre() if self._acompanante else None,
         }
 
-    def get_nombre(self):
-        return self._nombre
+    
 
     def obtener_requerimientos(self):
         """
@@ -57,4 +61,5 @@ class HotDog:
         """Verifica si hay inventario suficiente para preparar este HotDog."""
         requerimientos = self.obtener_requerimientos()
         return gestor_inventario.verificar_existencia_para_orden(requerimientos)
-
+    
+    

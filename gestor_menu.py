@@ -66,8 +66,6 @@ if not menu:
         guardar_datos_menu(menu)
 
 
-
-
 # Métodos de Gestión
 """def ver_lista_hotdogs(self):
     """
