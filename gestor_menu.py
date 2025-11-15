@@ -40,7 +40,7 @@ def obtener_datos_menu():
 def cargar_datos_menu(archivo="menú.json"):
     """Carga los hotdogs agregados por el usuario desde el JSON local."""
     try:
-        with open(archivo, 'rb', encoding='utf-8') as a:
+        with open(archivo, 'rb') as a:
             return pickle.load(a)
     except Exception as e:
         return []

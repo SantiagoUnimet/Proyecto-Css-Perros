@@ -20,6 +20,10 @@ class Ingrediente:
         
     def get_categoria(self):
         return self._categoria
+    
+    def get_nombre(self):
+        return self._nombre
+
 
     
 class Pan(Ingrediente):
@@ -31,18 +35,16 @@ class Pan(Ingrediente):
     
     def __str__(self):
         """SMuestra los atributos de la clase."""
-        return {
-            "categoria": self._categoria,
-            "nombre": self._nombre,
-            "tipo": self._tipo,
-            "tamaño": self._tamaño,
-            "unidad": self._unidad,
-        }
+        return f"{self._categoria}: {self._nombre}, {self._tipo}, {self._tamaño}, {self._unidad}"
     
     def es_compatible(self, otro_ingrediente):
         """Valida la compatibilidad de este ingrediente con otro (ej: longitud de pan y salchicha).Retorna True si son compatibles."""
         # La compatibilidad es True si las longitudes son idénticas
         return self._tamaño == otro_ingrediente._tamaño
+    
+    def get_nombre(self):
+        return self._nombre
+    
 
 class Salchicha(Ingrediente):
     def __init__(self, categoria, nombre, tipo, tamaño, unidad):
@@ -53,13 +55,7 @@ class Salchicha(Ingrediente):
     
     def __str__(self):
         """SMuestra los atributos de la clase."""
-        return {
-            "categoria": self._categoria,
-            "nombre": self._nombre,
-            "tipo": self._tipo,
-            "tamaño": self._tamaño,
-            "unidad": self._unidad,
-        }
+        return f"{self._categoria}: {self._nombre}, {self._tipo}, {self._tamaño}, {self._unidad}"
     
     def es_compatible(self, otro_ingrediente):
         """Valida la compatibilidad de este ingrediente con otro (ej: longitud de pan y salchicha).Retorna True si son compatibles."""
@@ -75,13 +71,8 @@ class Acompañante(Ingrediente):
     
     def __str__(self):
         """SMuestra los atributos de la clase."""
-        return {
-            "categoria": self._categoria,
-            "nombre": self._nombre,
-            "tipo": self._tipo,
-            "tamaño": self._tamaño,
-            "unidad": self._unidad,
-        }
+        return f"{self._categoria}: {self._nombre}, {self._tipo}, {self._tamaño}, {self._unidad}"
+
 
 class Salsa(Ingrediente):
     def __init__(self, categoria, nombre, base, color):
@@ -91,12 +82,7 @@ class Salsa(Ingrediente):
     
     def __str__(self):
         """SMuestra los atributos de la clase."""
-        return {
-            "categoria": self._categoria,
-            "nombre": self._nombre,
-            "base": self._base,
-            "color": self._color,
-        }
+        return f"{self._categoria}: {self._nombre}, {self._base}, {self._color}"
 
 class Topping(Ingrediente):
     def __init__(self, categoria, nombre, tipo, presentacion):
@@ -106,9 +92,4 @@ class Topping(Ingrediente):
     
     def __str__(self):
         """SMuestra los atributos de la clase."""
-        return {
-            "categoria": self._categoria,
-            "nombre": self._nombre,
-            "tipo": self._tipo,
-            "presentación": self._presentacion,
-        }
+        return f"{self._categoria}: {self._nombre}, {self._tipo}, {self._presentacion}"
