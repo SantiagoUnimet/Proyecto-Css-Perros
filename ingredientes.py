@@ -43,7 +43,7 @@ class Pan(Ingrediente):
         return self._tamaño == otro_ingrediente._tamaño
     
     def get_nombre(self):
-        return self._nombre
+        return f"{self._nombre}"
     
 
 class Salchicha(Ingrediente):

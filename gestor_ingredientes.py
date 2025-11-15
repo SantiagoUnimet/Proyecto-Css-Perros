@@ -3,7 +3,7 @@ import json
 from ingredientes import Pan, Salchicha, Acompañante, Salsa, Topping
 import pickle
 from hotdogs import HotDog
-from gestor_menu import cargar_datos_menu, guardar_datos_menu
+from gestor_menu import cargar_datos_menu, guardar_datos_menu, obtener_datos_menu
 
 # ----------------------------------------------------------------------
 # 2. Modulo de Gestión de Ingredientes (Módulos)
@@ -75,11 +75,30 @@ ingredientes = cargar_datos_inventario()
 
 if not ingredientes:
     print("No se encontraron ingredientes cargados. Consultando a la API...")
-
     ing = obtener_datos_inventario()
     if ing:
         ingredientes.append(ing)
         guardar_datos_inventario(ingredientes)
+
+menu = cargar_datos_menu() # (Esta es la función de gestor_menu.py)
+
+dict_ingredientes_maestro = {}
+if ingredientes:
+    dict_ingredientes_maestro = ingredientes[0] 
+
+# Ahora cargamos el menú
+menu = cargar_datos_menu() # (Esta es la función de gestor_menu.py)
+
+if not menu:
+    print("No se encontró un menú cargado. Consultando a la API...")
+
+    # Le pasamos el diccionario de ingredientes a la función modificada
+    combos_dict = obtener_datos_menu(dict_ingredientes_maestro) 
+
+    if combos_dict:
+        # Asumiendo que 'menu' también debe ser una lista con un dict dentro
+        menu.append(combos_dict) 
+        guardar_datos_menu(menu)
 
 
 
@@ -293,8 +312,6 @@ def eliminar_ingrediente():
     ingrediente_a_eliminar = None
     
     for llave, ingrediente in dict_ingredientes.items():
-        print(ingrediente.get_nombre)
-        print(ingrediente)
         # (Esto asume que ya corregiste get_nombre() en ingredientes.py)
         if ingrediente.get_nombre() == opcion and ingrediente.get_categoria() == categoria_str:
             llave_a_eliminar = llave
@@ -352,98 +369,3 @@ def eliminar_ingrediente():
         guardar_datos_inventario(ingredientes, "inventario.json")
         print(f"✅ ¡Ingrediente '{opcion}' eliminado exitosamente!")
 
-listar_productos_categoria()
-
-""" def eliminar_ingrediente():
-    """
-#Elimina un ingrediente en el diccionario en memoria y guarda.
-"""
-    
-    if not ingredientes:
-        print("Error: No hay datos de ingredientes cargados.")
-        return
-        
-    dict_ingredientes = ingredientes[0] 
-
-    print("Seleccione la categoría del ingrediente a eliminar:")
-    print("1. Pan")
-    print("2. Salchicha")
-    print("3. Acompañante")
-    print("4. Salsa")
-    print("5. Topping")
-    num = input("--> ")
-
-    '''# Generar una nueva ID única
-    try:
-        nueva_llave = max(int(k) for k in dict_ingredientes.keys()) + 1
-    except ValueError:
-        nueva_llave = 1 # Si el diccionario estaba vacío '''
-
-    ingrediente_a_eliminar = None
-
-    if num == "1":
-        for cat in dict_ingredientes.values():
-            if cat.get_categoria() == "Pan":
-                print(cat.__str__())
-        opcion = input("Indique el nombre del pan a eliminar: ")
-        for cat in dict_ingredientes.values():
-            print(cat.get_nombre)
-            if cat.get_nombre() == opcion:
-                print(cat)
-                ingrediente_a_eliminar = cat
-
-    elif num == "2":
-        for cat in dict_ingredientes.values():
-            if cat.get_categoria() == "Salchicha":
-                print(cat.__str__())
-        opcion = input("Indique el nombre de la salchicha a eliminar: ")
-        for cat in dict_ingredientes.values():
-            if cat.get_nombre() == opcion:
-                print(cat)
-                ingrediente_a_eliminar = cat
-
-    elif num == "3":
-        for cat in dict_ingredientes.values():
-            if cat.get_categoria() == "Acompañante":
-                print(cat.__str__())
-        opcion = input("Indique el nombre del acompañante a eliminar: ")
-        for cat in dict_ingredientes.values():
-            if cat.get_nombre() == opcion:
-                print(cat)
-                ingrediente_a_eliminar = cat
-    
-    elif num == "4":
-        for cat in dict_ingredientes.values():
-            if cat.get_categoria() == "Salsa":
-                print(cat.__str__())
-        opcion = input("Indique el nombre de la salsa a eliminar: ")
-        for cat in dict_ingredientes.values():
-            if cat.get_nombre() == opcion:
-                print(cat)
-                ingrediente_a_eliminar = cat
-
-    elif num == "5":
-        for cat in dict_ingredientes.values():
-            if cat.get_categoria() == "toppings":
-                print(cat.__str__())
-        opcion = input("Indique el nombre del topping a eliminar: ")
-        for cat in dict_ingredientes.values():
-            if cat.get_nombre() == opcion:
-                print(cat)
-                ingrediente_a_eliminar = cat
-    
-    else:
-        print("Opción no válida. No se agregó ningún ingrediente.")
-        return
-
-    if ingrediente_a_eliminar != None:
-        # Asignación al diccionario
-        dict_ingredientes.pop(cat)
-        
-        # Guardar los cambios en el archivo
-        guardar_datos_inventario(ingredientes, "inventario.json")
-        print(f"¡Ingrediente '{nombre}' eliminado exitosamente!")
-    else:
-        print("No se pudo crear el ingrediente.")
-
-eliminar_ingrediente() """
