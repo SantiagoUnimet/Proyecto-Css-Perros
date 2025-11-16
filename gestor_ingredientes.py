@@ -24,42 +24,41 @@ class GestorIngredientes:
         # duplicados en el JSON local.
         self._nombres_ingredientes_api = set()
 
-    def cargar_ingredientes_api(self, ingredientes_data_api):
+        # NUEVO: Guarda los nombres de ingredientes API eliminados
+        self._nombres_api_eliminados = set()
+
+    def cargar_ingredientes_api(self, ingredientes_data_api, api_eliminados_local):
         """Carga los ingredientes base de la API (con estructura anidada)."""
         if not ingredientes_data_api:
             return
+        
+        # NUEVO: Cargar la lista negra
+        self._nombres_api_eliminados = set(api_eliminados_local)
             
-        # 1. Iteramos la lista de grupos (ej: {Categoria: "Pan", Opciones: [...]})
         for categoria_grupo in ingredientes_data_api:
             try:
-                # 2. Obtenemos el nombre de la categoría
                 categoria_nombre = categoria_grupo['Categoria']
-
-                # 3. Manejar la 't' minúscula en "toppings"
                 if categoria_nombre.lower() == 'toppings':
                     categoria_nombre = 'Topping'
-                
-                # 4. Capitalizar para que coincida con nuestras clases ("Pan", "Salsa")
                 categoria_limpia = categoria_nombre.capitalize()
 
-                # 5. Iteramos la lista interna de "Opciones"
                 for ingrediente_data in categoria_grupo['Opciones']:
                     
-                    # 6. ¡IMPORTANTE! Agregamos la categoría a los datos
-                    #    del ingrediente, ya que no la tienen.
+                    # --- ¡VALIDACIÓN DE LISTA NEGRA! ---
+                    nombre_ing = ingrediente_data.get('nombre')
+                    if nombre_ing in self._nombres_api_eliminados:
+                        continue # Omitir este ingrediente, está en la lista negra
+                    # --- FIN DE VALIDACIÓN ---
+
                     ingrediente_data['categoria'] = categoria_limpia
-                    
-                    # 7. Ahora sí, creamos el ingrediente
                     ingrediente = utils.crear_ingrediente_desde_dict(ingrediente_data)
                     
                     if ingrediente is None:
-                        # La fábrica de utils.py ya imprimió el error
                         continue 
                     
-                    # 8. Registrar el ingrediente
                     self._ingredientes_por_categoria[ingrediente.get_categoria()].append(ingrediente)
                     self._ingredientes_por_nombre[ingrediente.get_nombre()] = ingrediente
-                    self._nombres_ingredientes_api.add(ingrediente.get_nombre())
+                    self._nombres_ingredientes_api.add(ingrediente.get_nombre()) # Sigue siendo API
 
             except KeyError as e:
                 print(f"Error al leer API de ingredientes: falta la llave {e} en el grupo.")
@@ -145,7 +144,6 @@ class GestorIngredientes:
             print(f"Error: No se encontró el ingrediente '{nombre}'.")
             return
 
-        # Validar si está en uso [cite: 41]
         hotdogs_afectados = gestor_menu.hotdogs_que_usan_ingrediente(nombre)
         
         if hotdogs_afectados:
@@ -158,13 +156,25 @@ class GestorIngredientes:
                 print("Eliminación cancelada.")
                 return
 
-            # Eliminar los hot dogs afectados
             for hd in hotdogs_afectados:
-                gestor_menu.eliminar_hotdog_directo(hd.get_nombre())
+                # Al eliminar los hotdogs, el gestor_menu los pondrá en su lista negra
+                gestor_menu.eliminar_hotdog(hd.get_nombre(), None) # Pasamos None al inventario
 
-        # Eliminar el ingrediente
+        # --- LÓGICA DE LISTA NEGRA ---
+        # Si el ingrediente era de la API, lo agregamos a la lista negra.
+        if nombre in self._nombres_ingredientes_api:
+            self._nombres_api_eliminados.add(nombre)
+            print(f"'{nombre}' agregado a la lista de eliminación permanente de la API.")
+        # --- FIN DE LÓGICA ---
+
+        # Eliminar el ingrediente de la memoria
         categoria = ingrediente.get_categoria()
         self._ingredientes_por_categoria[categoria].remove(ingrediente)
         del self._ingredientes_por_nombre[nombre]
         
         print(f"Ingrediente '{nombre}' eliminado exitosamente.")
+
+
+    def get_api_eliminados_para_guardar(self):
+            """Retorna la lista de ingredientes API eliminados."""
+            return list(self._nombres_api_eliminados)

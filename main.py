@@ -84,6 +84,66 @@ def _crear_topping():
 
 # --- Sub-menús de Módulos ---
 
+# (Puedes pegar esto justo después de la función _crear_topping())
+
+def _seleccionar_ingrediente(categoria, permitir_ninguno=False):
+    """
+    Muestra una lista de ingredientes de una categoría y pide al usuario
+    que seleccione uno. Retorna el objeto ingrediente.
+    """
+    print(f"\n--- Seleccionar {categoria} ---")
+    
+    # Obtener la lista de ingredientes de esa categoría
+    lista_ing = g_ingredientes._ingredientes_por_categoria.get(categoria, [])
+    
+    if not lista_ing:
+        print(f"Error: No hay ingredientes registrados en la categoría '{categoria}'.")
+        return None 
+        
+    # Imprimir la lista numerada
+    for i, ing in enumerate(lista_ing):
+        print(f"{i+1}. {ing.get_nombre()}") # Muestra (ej: "1. simple")
+    
+    # Configurar el prompt y el rango de opciones válidas
+    if permitir_ninguno:
+        print("0. Ninguno")
+        prompt = "Seleccione un número (0 para ninguno): "
+        rango = [0, len(lista_ing)]
+    else:
+        prompt = "Seleccione un número: "
+        rango = [1, len(lista_ing)] # Rango obligatorio
+
+    # Validar la selección del usuario
+    opcion = utils.validar_input_numerico(prompt, rango=rango)
+
+    if permitir_ninguno and opcion == 0:
+        return None # El usuario eligió "Ninguno"
+    
+    # Retornar el objeto ingrediente seleccionado
+    return lista_ing[opcion - 1]
+
+def _seleccionar_multiples_ingredientes(categoria):
+    """
+    Permite al usuario seleccionar múltiples ingredientes de una categoría
+    (para toppings y salsas).
+    """
+    seleccionados = []
+    while True:
+        # Reutilizamos la función anterior, permitiendo "Ninguno" para terminar
+        ing = _seleccionar_ingrediente(categoria, permitir_ninguno=True)
+        
+        if ing is None: # El usuario seleccionó "0. Ninguno"
+            break # Termina de agregar
+            
+        seleccionados.append(ing)
+        print(f"'{ing.get_nombre()}' agregado.")
+        
+        # Preguntar si desea agregar otro
+        if not utils.validar_confirmacion("¿Agregar otro ingrediente de esta categoría?"):
+            break
+            
+    return seleccionados
+
 def menu_modulo_1():
     """Maneja la UI del Módulo 1: Gestión de Ingredientes."""
     while True:
@@ -186,8 +246,40 @@ def menu_modulo_3():
             g_menu.ver_inventario_para_hotdog(nombre, g_inventario)
 
         elif opcion == 3:
-            print("Creación de Hot Dog no implementada en este demo (requiere UI compleja).")
-            pass
+            # --- ¡FUNCIÓN IMPLEMENTADA! ---
+            print("\n--- Agregar Nuevo Hot Dog ---")
+            nombre = utils.validar_input_texto("Nombre del nuevo Hot Dog: ")
+            if g_menu.buscar_hotdog(nombre):
+                print(f"Error: Ya existe un hot dog con el nombre '{nombre}'. Creación cancelada.")
+                continue # Vuelve al menú del Módulo 3
+
+            # 1. Seleccionar Pan (Obligatorio)
+            pan_obj = _seleccionar_ingrediente("Pan")
+            if pan_obj is None: # Ocurre si no hay panes registrados
+                print("Creación cancelada.")
+                continue
+            
+            # 2. Seleccionar Salchicha (Obligatorio)
+            salchicha_obj = _seleccionar_ingrediente("Salchicha")
+            if salchicha_obj is None: # Ocurre si no hay salchichas registradas
+                print("Creación cancelada.")
+                continue
+            
+            # 3. Seleccionar Toppings (Opcional, múltiple)
+            toppings_lista = _seleccionar_multiples_ingredientes("Topping")
+            
+            # 4. Seleccionar Salsas (Opcional, múltiple)
+            salsas_lista = _seleccionar_multiples_ingredientes("Salsa")
+            
+            # 5. Seleccionar Acompañante (Opcional, singular)
+            print("\n(Opcional) Seleccione un Acompañante para el combo:")
+            acomp_obj = _seleccionar_ingrediente("Acompañante", permitir_ninguno=True)
+            
+            # 6. Crear y agregar el nuevo Hot Dog
+            nuevo_hd = HotDog(nombre, pan_obj, salchicha_obj, toppings_lista, salsas_lista, acomp_obj)
+            
+            # 7. Usar la función del gestor (que ya valida compatibilidad e inventario)
+            g_menu.agregar_hotdog(nuevo_hd, g_inventario) 
 
         elif opcion == 4:
             nombre = input("Ingrese el nombre exacto del Hot Dog a eliminar: ")
@@ -213,38 +305,40 @@ def inicializar_sistema():
     """Descarga datos API, carga datos locales e inicializa los gestores."""
     global g_ingredientes, g_inventario, g_menu, g_simulador, g_stats
     
-    # 1. Descargar datos base de la API (Solo ingredientes y menú)
     api_ing, api_menu = utils.descargar_datos_api()
-    if api_ing is None or api_menu is None: # Si la API falla, no podemos continuar
+    if api_ing is None or api_menu is None:
         return False 
         
-    # 2. Cargar datos locales (si existen)
     datos_locales = utils.cargar_datos_locales()
     
-    # 3. Inicializar Gestores
     g_ingredientes = GestorIngredientes()
-    g_inventario = GestorInventario(g_ingredientes) # Depende de ingredientes
-    g_menu = GestorMenu(g_ingredientes) # Depende de ingredientes
+    g_inventario = GestorInventario(g_ingredientes)
+    g_menu = GestorMenu(g_ingredientes)
     g_stats = GestorEstadisticas()
     
-    # 4. Cargar datos en los Gestores
-    # Ingredientes
-    g_ingredientes.cargar_ingredientes_api(api_ing)
-    g_ingredientes.cargar_ingredientes_locales(datos_locales["nuevos_ingredientes"])
+    # Cargar datos en los Gestores
     
-    # Inventario (¡AHORA SOLO CARGA LOCAL!)
-    # Ya no existe la función g_inventario.cargar_inventario_api()
-    # El inventario se carga únicamente desde el archivo local.
+    # --- ¡MODIFICADO! ---
+    # Pasamos la lista negra a los cargadores de la API
+    g_ingredientes.cargar_ingredientes_api(
+        api_ing, 
+        datos_locales["api_ingredientes_eliminados"]
+    )
+    g_ingredientes.cargar_ingredientes_locales(
+        datos_locales["nuevos_ingredientes"]
+    )
+    
     g_inventario.cargar_inventario_local(datos_locales["inventario"])
     
-    # Menú (API primero, luego local)
-    g_menu.cargar_menu_api(api_menu)
+    # --- ¡MODIFICADO! ---
+    g_menu.cargar_menu_api(
+        api_menu, 
+        datos_locales["api_hotdogs_eliminados"]
+    )
     g_menu.cargar_menu_local(datos_locales["nuevos_hotdogs"])
     
-    # Estadísticas
     g_stats.cargar_estadisticas(datos_locales["estadisticas"])
 
-    # 5. Inicializar el simulador (depende de menú e inventario)
     g_simulador = Simulador(g_menu, g_inventario)
     
     print("\n¡Sistema Hot Dog CCS inicializado y listo!")
@@ -258,7 +352,9 @@ def guardar_y_salir():
         "nuevos_ingredientes": g_ingredientes.get_ingredientes_para_guardar(),
         "nuevos_hotdogs": g_menu.get_menu_para_guardar(),
         "inventario": g_inventario.get_inventario_para_guardar(),
-        "estadisticas": g_stats.get_estadisticas_para_guardar()
+        "estadisticas": g_stats.get_estadisticas_para_guardar(),
+        "api_ingredientes_eliminados": g_ingredientes.get_api_eliminados_para_guardar(), # NUEVO
+        "api_hotdogs_eliminados": g_menu.get_api_eliminados_para_guardar()              # NUEVO
     }
     
     utils.guardar_datos_locales(datos_a_guardar)

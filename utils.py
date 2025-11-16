@@ -94,22 +94,39 @@ def cargar_datos_locales():
     """Carga los datos del archivo JSON local si existe."""
     if not os.path.exists(ARCHIVO_LOCAL):
         print(f"No se encontró el archivo local '{ARCHIVO_LOCAL}'. Se creará uno nuevo al salir.")
-        # El inventario ahora inicia en None (o vacío)
-        return {"nuevos_ingredientes": [], "nuevos_hotdogs": [], "inventario": None, "estadisticas": []}
+        return {
+            "nuevos_ingredientes": [], 
+            "nuevos_hotdogs": [], 
+            "inventario": None, 
+            "estadisticas": [],
+            "api_ingredientes_eliminados": [], # NUEVO
+            "api_hotdogs_eliminados": []      # NUEVO
+        }
     
     try:
         with open(ARCHIVO_LOCAL, 'r', encoding='utf-8') as f:
             datos = json.load(f)
             print(f"Datos locales de '{ARCHIVO_LOCAL}' cargados.")
+            
             # Asegurarse que las llaves principales existan
             datos.setdefault("nuevos_ingredientes", [])
             datos.setdefault("nuevos_hotdogs", [])
-            datos.setdefault("inventario", None) # El inventario se carga desde aquí
+            datos.setdefault("inventario", None)
             datos.setdefault("estadisticas", [])
+            datos.setdefault("api_ingredientes_eliminados", []) # NUEVO
+            datos.setdefault("api_hotdogs_eliminados", [])      # NUEVO
             return datos
+            
     except Exception as e:
         print(f"Error al cargar '{ARCHIVO_LOCAL}': {e}. Se usarán datos vacíos.")
-        return {"nuevos_ingredientes": [], "nuevos_hotdogs": [], "inventario": None, "estadisticas": []}
+        return {
+            "nuevos_ingredientes": [], 
+            "nuevos_hotdogs": [], 
+            "inventario": None, 
+            "estadisticas": [],
+            "api_ingredientes_eliminados": [],
+            "api_hotdogs_eliminados": []
+        }
 
 def guardar_datos_locales(datos_a_guardar):
     """Guarda el estado actual (nuevos items, inventario) en el JSON local."""

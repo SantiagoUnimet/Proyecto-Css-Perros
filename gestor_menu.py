@@ -14,6 +14,9 @@ class GestorMenu:
         
         self._nombres_hotdogs_api = set()
 
+        # NUEVO: Guarda los nombres de hotdogs API eliminados
+        self._nombres_api_eliminados = set()
+
     def _buscar_ingredientes_para_hotdog(self, data):
         """
         Ayudante para cargar_menu. Busca los OBJETOS ingredientes
@@ -72,16 +75,24 @@ class GestorMenu:
             print(f"Error inesperado procesando hotdog '{data.get('nombre', '???')}': {e}")
             return None
 
-    def cargar_menu_api(self, menu_data_api):
+    def cargar_menu_api(self, menu_data_api, api_eliminados_local):
         """Carga el menú base de la API."""
         if not menu_data_api:
             return
         
+        # NUEVO: Cargar la lista negra
+        self._nombres_api_eliminados = set(api_eliminados_local)
+        
         for data in menu_data_api:
+            
+            # --- ¡VALIDACIÓN DE LISTA NEGRA! ---
+            nombre_hd = data.get('nombre')
+            if nombre_hd in self._nombres_api_eliminados:
+                continue # Omitir este hotdog, está en la lista negra
+            # --- FIN DE VALIDACIÓN ---
+
             hotdog = self._buscar_ingredientes_para_hotdog(data)
             
-            # --- ¡NUEVA VALIDACIÓN! ---
-            # Solo agregamos el hotdog si se pudo crear exitosamente
             if hotdog:
                 self._hotdogs.append(hotdog)
                 self._hotdogs_por_nombre[hotdog.get_nombre()] = hotdog
@@ -178,12 +189,20 @@ class GestorMenu:
             print(f"Error: No se encontró el hot dog '{nombre_hotdog}'.")
             return
 
-        # Validar si aún hay inventario para venderlo [cite: 70]
-        if hotdog.validar_inventario(gestor_inventario):
-            print(f"Advertencia: Aún hay inventario suficiente para seguir vendiendo '{nombre_hotdog}'.")
-            if not utils.validar_confirmacion("¿Está seguro de que desea eliminarlo del menú?"):
-                print("Eliminación cancelada.")
-                return
+        # Validar si aún hay inventario para venderlo
+        # Si gestor_inventario es None, es porque lo llamó eliminar_ingrediente
+        if gestor_inventario is not None:
+            if hotdog.validar_inventario(gestor_inventario):
+                print(f"Advertencia: Aún hay inventario suficiente para seguir vendiendo '{nombre_hotdog}'.")
+                if not utils.validar_confirmacion("¿Está seguro de que desea eliminarlo del menú?"):
+                    print("Eliminación cancelada.")
+                    return
+        
+        # --- LÓGICA DE LISTA NEGRA ---
+        if nombre_hotdog in self._nombres_hotdogs_api:
+            self._nombres_api_eliminados.add(nombre_hotdog)
+            print(f"'{nombre_hotdog}' agregado a la lista de eliminación permanente de la API.")
+        # --- FIN DE LÓGICA ---
 
         # Eliminación (delegamos a un método interno)
         self.eliminar_hotdog_directo(nombre_hotdog)
@@ -206,3 +225,8 @@ class GestorMenu:
             if nombre_ingrediente in hotdog.get_ingredientes_nombres():
                 afectados.append(hotdog)
         return afectados
+
+    def get_api_eliminados_para_guardar(self):
+        """Retorna la lista de hotdogs API eliminados."""
+        return list(self._nombres_api_eliminados)
+    
