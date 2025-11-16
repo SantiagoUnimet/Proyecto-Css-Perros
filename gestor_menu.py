@@ -1,137 +1,208 @@
+# ----------------------------------------------------------------------
+# Módulo 3: Gestión del menú
+# ----------------------------------------------------------------------
+import utils
 from hotdogs import HotDog
-import json
-import requests
-import pickle
 
-
-# Métodos de Persistencia
-# En gestor_menu.py
-
-# --- NUEVA FUNCIÓN DE BÚSQUEDA ---
-def _buscar_ingrediente_por_nombre(nombre_ingrediente, dict_ingredientes):
-    """Busca un objeto ingrediente en el diccionario maestro por su nombre."""
-    if not nombre_ingrediente: # Si el nombre es None o ""
-        return None
-    for ing_obj in dict_ingredientes.values():
-        if ing_obj.get_nombre() == nombre_ingrediente:
-            return ing_obj
-    print(f"Advertencia: No se encontró el objeto ingrediente para '{nombre_ingrediente}'")
-    return None
-
-def obtener_datos_menu(dict_ingredientes): # <-- AÑADIR PARÁMETRO
-    """Descarga y carga los datos iniciales de la API de GitHub."""
+class GestorMenu:
+    """Administra el menú de Hot Dogs (alta, baja, consulta)."""
     
-    api_menu = "https://raw.githubusercontent.com/FernandoSapient/BPTSP05_2526-1/refs/heads/main/menu.json"
-    response = requests.get(api_menu)
-    menu = {} # El menú será un diccionario de {nombre: HotDog_obj}
-
-    try:
-        if response.status_code == 200:
-            datos = response.json()
-            cont_menu = 0
-            for i in datos: # 'i' es un diccionario de un hotdog
-                nombre_hotdog = i["nombre"]
-                
-                # --- MAPEO DE STRING A OBJETO ---
-                # Busca los objetos de ingredientes usando el diccionario maestro
-                pan_obj = _buscar_ingrediente_por_nombre(i["Pan"], dict_ingredientes)
-                salchicha_obj = _buscar_ingrediente_por_nombre(i["Salchicha"], dict_ingredientes)
-                acomp_obj = _buscar_ingrediente_por_nombre(i["Acompañante"], dict_ingredientes)
-                
-                # Para listas (toppings y salsas)
-                salsas_key = "Salsas" if "Salsas" in i else "salsas"
-                
-                toppings_objs = [_buscar_ingrediente_por_nombre(t, dict_ingredientes) for t in i["toppings"]]
-                salsas_objs = [_buscar_ingrediente_por_nombre(s, dict_ingredientes) for s in i[salsas_key]]
-                
-                # --- CREACIÓN DEL HOTDOG CON OBJETOS ---
-                nuevo_hotdog = HotDog(nombre_hotdog, pan_obj, salchicha_obj, toppings_objs, salsas_objs, acomp_obj)
-                
-                # --- CORRECCIÓN DE GUARDADO ---
-                # Guarda el hotdog usando su nombre como llave, no "combo"
-                menu[nombre_hotdog] = nuevo_hotdog
-                cont_menu += 1
-                
-            print(f"{cont_menu} combos cargados desde la API.")
-            return menu
+    def __init__(self, gestor_ingredientes):
+        self._hotdogs = [] # Lista de objetos HotDog
+        self._hotdogs_por_nombre = {} # Diccionario para búsqueda rápida
+        self._gestor_ingredientes = gestor_ingredientes
         
-    except requests.exceptions.ConnectionError:
-        print("Error de conexión: No se pudo acceder a la URL de GitHub.")
-        return None
-    except json.JSONDecodeError:
-        print("Error de formato: El contenido de la URL no es un JSON válido.")
-        return None
+        self._nombres_hotdogs_api = set()
 
-    
+    def _buscar_ingredientes_para_hotdog(self, data):
+        """
+        Ayudante para cargar_menu. Busca los OBJETOS ingredientes
+        a partir de los NOMBRES en el JSON.
+        """
+        try:
+            if 'nombre' not in data:
+                print("Error procesando hotdog (JSON): Falta la llave 'nombre'.")
+                return None
+            
+            # --- CORRECCIÓN DE MAYÚSCULAS/MINÚSCULAS ---
+            
+            pan_nombre = data['Pan']
+            sal_nombre = data['Salchicha']
+            top_nombres = data['toppings']      # 'toppings' es minúscula
+            aco_nombre = data['Acompañante']    # 'Acompañante' es mayúscula
 
-def cargar_datos_menu(archivo="menú.json"):
-    """Carga los hotdogs agregados por el usuario desde el JSON local."""
-    try:
-        with open(archivo, 'rb') as a:
-            return pickle.load(a)
-    except Exception as e:
-        return []
+            # --- ¡LA LÍNEA CLAVE! ---
+            # Busca 'Salsas' (mayúscula) y si no la encuentra,
+            # busca 'salsas' (minúscula).
+            sal_nombres = data.get('Salsas', data.get('salsas'))
 
+            # Si después de buscar ambas llaves, el resultado es None
+            # (lo cual no debería pasar si la llave existe, aunque esté vacía),
+            # asignamos una lista vacía por seguridad.
+            if sal_nombres is None:
+                print(f"Advertencia: Hotdog '{data.get('nombre')}' no tiene llave 'Salsas' ni 'salsas'. Asignando lista vacía.")
+                sal_nombres = []
+            
+            # --- FIN DE LA CORRECCIÓN ---
 
-def guardar_datos_menu(menu, archivo="menú.json"):
-    """Guarda los Hot Dogs locales en un archivo JSON."""
-    try:
-        with open(archivo, 'wb') as a:
-            pickle.dump(menu, a)
-    except Exception as e:
-        print(f"Error al guardar el menú: {e}")
-        return None
-
-
-
-
-
-# Métodos de Gestión
-"""def ver_lista_hotdogs(self):
-    """
-#Muestra la lista de Hot Dogs actualmente en el menú.
-"""
-    print("\n--- Menú Actual de Hot Dogs ---")
-    if not self._menu_hotdogs:
-        print("El menú está vacío.")
-        return
-    for nombre in self._menu_hotdogs.keys():
-        print(f"- {nombre}")
-def agregar_hotdog(self, hotdog, gestor_inventario):
-    """
-#Agrega un HotDog, realizando validaciones de longitud y existencia de inventario.
-"""
-    nombre = hotdog.get_nombre()
-    if nombre in self._menu_hotdogs:
-        print("❌ Error: Ese HotDog ya existe.")
-        return
-    # 1. Validación de Longitud (Pan vs. Salchicha) - Lógica de confirmación
-    if hotdog._pan and hotdog._salchicha and not hotdog._pan.es_compatible(hotdog._salchicha):
-        print("⚠️ Advertencia de Longitud:")
-        print(f"El Pan ({hotdog._pan._tamaño} cm) y la Salchicha ({hotdog._salchicha._tamaño} cm) NO coinciden.")
+            pan_obj = self._gestor_ingredientes.buscar_ingrediente(pan_nombre)
+            sal_obj = self._gestor_ingredientes.buscar_ingrediente(sal_nombre)
+            
+            if not pan_obj:
+                print(f"No se pudo cargar '{data['nombre']}': El ingrediente 'pan' ({pan_nombre}) no existe.")
+                return None
+            if not sal_obj:
+                print(f"No se pudo cargar '{data['nombre']}': El ingrediente 'salchicha' ({sal_nombre}) no existe.")
+                return None
+                
+            top_objs = [self._gestor_ingredientes.buscar_ingrediente(t) for t in top_nombres]
+            sal_objs = [self._gestor_ingredientes.buscar_ingrediente(s) for s in sal_nombres]
+            aco_obj = self._gestor_ingredientes.buscar_ingrediente(aco_nombre)
+            
+            # Filtramos Nones (ingredientes no encontrados)
+            top_objs = [t for t in top_objs if t]
+            sal_objs = [s for s in sal_objs if s]
+            
+            return HotDog(data['nombre'], pan_obj, sal_obj, top_objs, sal_objs, aco_obj)
         
-        respuesta = input("¿Desea crear este HotDog a pesar de la incompatibilidad de tamaño? (S/N): ").strip().upper()
-        if respuesta != 'S':
-            print(f"🚫 Creación de HotDog '{nombre}' cancelada por el usuario.")
+        except KeyError as e:
+            print(f"Error procesando hotdog '{data.get('nombre', '???')}' (JSON): Falta la llave {e}.")
+            return None
+        except Exception as e:
+            print(f"Error inesperado procesando hotdog '{data.get('nombre', '???')}': {e}")
+            return None
+
+    def cargar_menu_api(self, menu_data_api):
+        """Carga el menú base de la API."""
+        if not menu_data_api:
             return
-    # 2. Validación de Inventario (Advertencia)
-    if not hotdog.validar_inventario(gestor_inventario):
-        print("⚠️ Advertencia de Inventario: No hay inventario suficiente para este HotDog en este momento.")
-    
-    # 3. Guardar el nuevo HotDog
-    self._menu_hotdogs[nombre] = hotdog
-    self.guardar_datos_locales()
-    print(f"✅ HotDog '{nombre}' agregado al menú.")
+        
+        for data in menu_data_api:
+            hotdog = self._buscar_ingredientes_para_hotdog(data)
+            
+            # --- ¡NUEVA VALIDACIÓN! ---
+            # Solo agregamos el hotdog si se pudo crear exitosamente
+            if hotdog:
+                self._hotdogs.append(hotdog)
+                self._hotdogs_por_nombre[hotdog.get_nombre()] = hotdog
+                self._nombres_hotdogs_api.add(hotdog.get_nombre())
+
+    def cargar_menu_local(self, menu_data_local):
+        """Carga el menú creado por el usuario."""
+        for data in menu_data_local:
+            if data['nombre'] not in self._hotdogs_por_nombre: # Evitar duplicados
+                hotdog = self._buscar_ingredientes_para_hotdog(data)
+                
+                # --- ¡NUEVA VALIDACIÓN! ---
+                if hotdog: # Validar también al cargar local
+                    self._hotdogs.append(hotdog)
+                    self._hotdogs_por_nombre[hotdog.get_nombre()] = hotdog
+
+    def get_menu_para_guardar(self):
+        """Retorna una lista de diccionarios de los hotdogs NO API."""
+        locales = []
+        for hotdog in self._hotdogs:
+            if hotdog.get_nombre() not in self._nombres_hotdogs_api:
+                locales.append(hotdog.to_dict())
+        return locales
+        
+    def get_hotdogs(self):
+        """Retorna la lista de todos los objetos HotDog."""
+        return self._hotdogs
+
+    def buscar_hotdog(self, nombre):
+        """Busca un hotdog por nombre. Retorna el objeto o None."""
+        return self._hotdogs_por_nombre.get(nombre)
+
+    def ver_lista_hotdogs(self):
+        """Módulo 3.1: Ver la lista de hot dogs."""
+        print("\n--- Menú de Hot Dogs ---")
+        if not self._hotdogs:
+            print("No hay hot dogs en el menú.")
+            return
+        
+        for hd in self._hotdogs:
+            print(f"  -> {hd.get_nombre()}")
+            # Opcional: imprimir ingredientes
+            # print(f"     Ingredientes: {', '.join(hd.get_ingredientes_nombres())}")
+
+    def ver_inventario_para_hotdog(self, nombre_hotdog, gestor_inventario):
+        """Módulo 3.2: Ver si hay inventario para un hot dog específico."""
+        hotdog = self.buscar_hotdog(nombre_hotdog)
+        if not hotdog:
+            print(f"Error: No se encontró el hot dog '{nombre_hotdog}'.")
+            return
+
+        if hotdog.validar_inventario(gestor_inventario):
+            print(f"¡Hay inventario suficiente para preparar '{nombre_hotdog}'!")
+        else:
+            print(f"No hay inventario suficiente para preparar '{nombre_hotdog}'.")
+            
+            # Opcional: detallar qué falta
+            req = hotdog.obtener_requerimientos()
+            _, ing_faltante = gestor_inventario.verificar_existencia_para_orden(req)
+            if ing_faltante:
+                print(f"  (Falta o no hay suficiente: {ing_faltante})")
 
 
-def eliminar_hotdog(self, nombre, gestor_inventario):
-    """
-#Elimina un HotDog.
-"""
-    if nombre not in self._menu_hotdogs:
-        return
+    def agregar_hotdog(self, hotdog_obj, gestor_inventario):
+        """Módulo 3.3: Agrega un nuevo hot dog al menú."""
+        nombre = hotdog_obj.get_nombre()
+        if nombre in self._hotdogs_por_nombre:
+            print(f"Error: Ya existe un hot dog con el nombre '{nombre}'.")
+            return False
+
+        # Validar compatibilidad pan y salchicha [cite: 65]
+        pan = hotdog_obj.get_pan()
+        salchicha = hotdog_obj.get_salchicha()
+        if hasattr(pan, 'es_compatible') and not pan.es_compatible(salchicha):
+            print(f"Advertencia: El tamaño del pan ({pan._tamaño}{pan._unidad}) no coincide con la salchicha ({salchicha._tamaño}{salchicha._unidad}).")
+            if not utils.validar_confirmacion("¿Desea agregarlo de todas formas?"):
+                print("Registro de hot dog cancelado.")
+                return False
+
+        # Advertir si no hay inventario [cite: 69]
+        if not hotdog_obj.validar_inventario(gestor_inventario):
+            print("Advertencia: No hay inventario suficiente de uno o más ingredientes para este hot dog.")
+            # El PDF no dice que pidamos confirmación aquí, solo que mostremos el mensaje.
+
+        self._hotdogs.append(hotdog_obj)
+        self._hotdogs_por_nombre[nombre] = hotdog_obj
+        print(f"Hot dog '{nombre}' agregado al menú exitosamente.")
+        return True
+
+    def eliminar_hotdog(self, nombre_hotdog, gestor_inventario):
+        """Módulo 3.4: Elimina un hot dog (con validación de inventario)."""
+        hotdog = self.buscar_hotdog(nombre_hotdog)
+        if not hotdog:
+            print(f"Error: No se encontró el hot dog '{nombre_hotdog}'.")
+            return
+
+        # Validar si aún hay inventario para venderlo [cite: 70]
+        if hotdog.validar_inventario(gestor_inventario):
+            print(f"Advertencia: Aún hay inventario suficiente para seguir vendiendo '{nombre_hotdog}'.")
+            if not utils.validar_confirmacion("¿Está seguro de que desea eliminarlo del menú?"):
+                print("Eliminación cancelada.")
+                return
+
+        # Eliminación (delegamos a un método interno)
+        self.eliminar_hotdog_directo(nombre_hotdog)
+        print(f"Hot dog '{nombre_hotdog}' eliminado del menú.")
+
+    def eliminar_hotdog_directo(self, nombre_hotdog):
+        """Elimina un hotdog sin validaciones (usado por Módulo 1)."""
+        hotdog = self._hotdogs_por_nombre.get(nombre_hotdog)
+        if hotdog:
+            self._hotdogs.remove(hotdog)
+            del self._hotdogs_por_nombre[nombre_hotdog]
+            print(f"(Hot dog '{nombre_hotdog}' eliminado por dependencia de ingrediente)")
+            
+    # --- Métodos de Ayuda ---
     
-    del self._menu_hotdogs[nombre]
-    self.guardar_datos_locales()
-    print(f"✅ HotDog '{nombre}' eliminado del menú.")"""
-    
+    def hotdogs_que_usan_ingrediente(self, nombre_ingrediente):
+        """Retorna una lista de hotdogs (objetos) que usan un ingrediente."""
+        afectados = []
+        for hotdog in self._hotdogs:
+            if nombre_ingrediente in hotdog.get_ingredientes_nombres():
+                afectados.append(hotdog)
+        return afectados
