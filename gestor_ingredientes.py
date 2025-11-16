@@ -34,8 +34,9 @@ def obtener_datos_inventario():
                         nuevo_ingrediente = Salsa(i["Categoria"], j["nombre"], j["base"], j["color"])
                     else:
                         nuevo_ingrediente = Topping(i["Categoria"], j["nombre"], j['tipo'], j["presentación"])
-                    ingredientes["Ing"] = nuevo_ingrediente
                     cont_ing += 1
+                    ingredientes[cont_ing] = nuevo_ingrediente
+                    
             
             print(f"{cont_ing} ingredientes cargados desde la API.")
             return ingredientes
@@ -80,7 +81,56 @@ if not ingredientes:
 
 
 
+def listar_productos_categoria():
 
+    print("1. Pan, 2. Salchicha, 3. Topping, 4. Salsa, 5. Acompañante")
+    num = input()
+    for cat in ingredientes[0].values():
+        if num == "1":
+            if cat.get_categoria() == "Pan":
+                print(cat.__str__())
+        if num == "2":
+            if cat.get_categoria() == "Salchicha":
+                print(cat.__str__())
+        if num == "3":
+            if cat.get_categoria() == "Acompañante":
+                print(cat.__str__())
+        if num == "4":
+            if cat.get_categoria() == "Salsa":
+                print(cat.__str__())
+        if num == "5":
+            if cat.get_categoria() == "toppings":
+                print(cat.__str__())
+
+def listar_producto_categoria_tipo():
+    print("1. Pan, 2. Salchicha, 3. Topping, 4. Salsa, 5. Acompañante")
+    num = input()
+    print(ingredientes[0])
+    if num == "1":
+        lista = []
+        for cat in ingredientes[0].values():
+            lista.append(cat.get_nombre)
+        obtener = input("")
+        print(cat.__str__())
+    for cat in ingredientes[0].values():
+        if num == "1" and cat.get_categoria() == "Pan":
+            obtener = input(print(f"Selecciona uno de los tipos de pan que hay: {cat.get_nombre()}"))
+            if obtener == cat.get_nombre():
+                    print(cat.__str__())
+        if num == "2":
+            if cat.get_categoria() == "Salchicha":
+                print(cat.__str__())
+        if num == "3":
+            if cat.get_categoria() == "Acompañante":
+                print(cat.__str__())
+        if num == "4":
+            if cat.get_categoria() == "Salsa":
+                print(cat.__str__())
+        if num == "5":
+            if cat.get_categoria() == "toppings":
+                print(cat.__str__())
+
+listar_producto_categoria_tipo()
 
 
 """ def get_ingredientes_maestros(self):
