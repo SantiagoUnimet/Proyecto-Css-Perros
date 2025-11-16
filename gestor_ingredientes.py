@@ -2,6 +2,8 @@ import requests
 import json
 from ingredientes import Pan, Salchicha, Acompañante, Salsa, Topping
 import pickle
+from hotdogs import HotDog
+from gestor_menu import cargar_datos_menu, guardar_datos_menu, obtener_datos_menu
 
 # ----------------------------------------------------------------------
 # 2. Modulo de Gestión de Ingredientes (Módulos)
@@ -73,115 +75,296 @@ ingredientes = cargar_datos_inventario()
 
 if not ingredientes:
     print("No se encontraron ingredientes cargados. Consultando a la API...")
-
     ing = obtener_datos_inventario()
     if ing:
         ingredientes.append(ing)
         guardar_datos_inventario(ingredientes)
 
+menu = cargar_datos_menu() # (Esta es la función de gestor_menu.py)
+
+dict_ingredientes_maestro = {}
+if ingredientes:
+    dict_ingredientes_maestro = ingredientes[0] 
+
+# Ahora cargamos el menú
+menu = cargar_datos_menu() # (Esta es la función de gestor_menu.py)
+
+if not menu:
+    print("No se encontró un menú cargado. Consultando a la API...")
+
+    # Le pasamos el diccionario de ingredientes a la función modificada
+    combos_dict = obtener_datos_menu(dict_ingredientes_maestro) 
+
+    if combos_dict:
+        # Asumiendo que 'menu' también debe ser una lista con un dict dentro
+        menu.append(combos_dict) 
+        guardar_datos_menu(menu)
+
 
 
 def listar_productos_categoria():
 
-    print("1. Pan, 2. Salchicha, 3. Topping, 4. Salsa, 5. Acompañante")
+    print("1. Pan, 2. Salchicha, 3. Acompañante, 4. Salsa, 5. Toppings")
     num = input()
     for cat in ingredientes[0].values():
         if num == "1":
             if cat.get_categoria() == "Pan":
                 print(cat.__str__())
-        if num == "2":
+        elif num == "2":
             if cat.get_categoria() == "Salchicha":
                 print(cat.__str__())
-        if num == "3":
+        elif num == "3":
             if cat.get_categoria() == "Acompañante":
                 print(cat.__str__())
-        if num == "4":
+        elif num == "4":
             if cat.get_categoria() == "Salsa":
                 print(cat.__str__())
-        if num == "5":
+        elif num == "5":
             if cat.get_categoria() == "toppings":
                 print(cat.__str__())
 
-def listar_producto_categoria_tipo():
-    print("1. Pan, 2. Salchicha, 3. Topping, 4. Salsa, 5. Acompañante")
+
+def listar_productos_categoria_tipo():
+    print("1. Pan, 2. Salchicha, 3. Acompañante, 4. Salsa, 5. Toppings")
     num = input()
-    print(ingredientes[0])
     if num == "1":
-        lista = []
         for cat in ingredientes[0].values():
-            lista.append(cat.get_nombre)
-        obtener = input("")
-        print(cat.__str__())
-    for cat in ingredientes[0].values():
-        if num == "1" and cat.get_categoria() == "Pan":
-            obtener = input(print(f"Selecciona uno de los tipos de pan que hay: {cat.get_nombre()}"))
-            if obtener == cat.get_nombre():
+            if cat.get_categoria() == "Pan":
+                obtener = input(f"Desea obtener la información de: {cat.get_nombre()}? s/n: ")
+                if obtener == "s":
                     print(cat.__str__())
-        if num == "2":
+                    return
+    elif num == "2":
+        for cat in ingredientes[0].values():
             if cat.get_categoria() == "Salchicha":
-                print(cat.__str__())
-        if num == "3":
+                obtener = input(f"Desea obtener la información de: {cat.get_nombre()}? (s/n)")
+                if obtener == "s":
+                    print(cat.__str__())
+                    return
+    elif num == "3":
+        for cat in ingredientes[0].values():
             if cat.get_categoria() == "Acompañante":
-                print(cat.__str__())
-        if num == "4":
+                obtener = input(f"Desea obtener la información de: {cat.get_nombre()}? (s/n)")
+                if obtener == "s":
+                    print(cat.__str__())
+                    return
+    elif num == "4":
+        for cat in ingredientes[0].values():
             if cat.get_categoria() == "Salsa":
-                print(cat.__str__())
-        if num == "5":
+                obtener = input(f"Desea obtener la información de: {cat.get_nombre()}? (s/n)")
+                if obtener == "s":
+                    print(cat.__str__())
+                    return
+    elif num == "5":
+        for cat in ingredientes[0].values():
             if cat.get_categoria() == "toppings":
-                print(cat.__str__())
-
-listar_producto_categoria_tipo()
-
-
-""" def get_ingredientes_maestros(self):
-    """
-    #Retorna el diccionario maestro de ingredientes.
-"""
-    return self._ingredientes_maestros
-def ver_lista_maestra_simple(self):
-    """
-    #Muestra una lista simple de todos los ingredientes maestros.
-"""
-    print("\n--- Lista Maestra de Ingredientes ---")
-    if not self._ingredientes_maestros:
-        print("La lista maestra está vacía.")
-        return
-    for nombre, ing in self._ingredientes_maestros.items():
-        print(f"- {nombre} ({ing._categoria}, {ing._tamaño}{ing._unidad})")
+                obtener = input(f"Desea obtener la información de: {cat.get_nombre()}? (s/n)")
+                if obtener == "s":
+                    print(cat.__str__())
+                    return
 
 
-def eliminar_ingrediente(self, nombre, gestor_menu, gestor_inventario):
-    """
-    # pidiendo confirmación para eliminar los Hot Dogs asociados.
-"""
-    if nombre not in self._ingredientes_maestros:
-        print(f"❌ Error: El ingrediente '{nombre}' no existe en la lista maestra.")
-        return
-    # 1. Verificar uso en el menú
-    hotdogs_afectados = []
-    menu = gestor_menu.get_menu()
+def agregar_ingrediente():
+    """Agrega un nuevo ingrediente al diccionario en memoria y guarda."""
     
-    for hd_nombre, hotdog in menu.items():
-        requerimientos = hotdog.obtener_requerimientos()
-        if nombre in requerimientos:
-            hotdogs_afectados.append(hd_nombre)
-    # 2. Manejo de la Eliminación
+    if not ingredientes:
+        print("Error: No hay datos de ingredientes cargados.")
+        return
+        
+    dict_ingredientes = ingredientes[0] 
+
+    print("Seleccione la categoría del ingrediente a agregar:")
+    print("1. Pan")
+    print("2. Salchicha")
+    print("3. Acompañante")
+    print("4. Salsa")
+    print("5. Topping")
+    num = input("--> ")
+
+    # Generar una nueva ID única
+    try:
+        nueva_llave = max(int(k) for k in dict_ingredientes.keys()) + 1
+    except ValueError:
+        nueva_llave = 1 # Si el diccionario estaba vacío
+
+    nuevo_ingrediente = None
+
+    if num == "1":
+        categoria = "Pan"
+        nombre = input("Indique el nombre del pan: ")
+        tipo = input("Indique el tipo de pan (ej: Brioche, Integral): ")
+        try:
+            tamaño = int(input("Indique el tamaño en números (ej: 15): "))
+        except ValueError:
+            print("Error: El tamaño debe ser un número.")
+            return
+        unidad = input("Indique la unidad de medida (ej: cm): ")
+        nuevo_ingrediente = Pan(categoria, nombre, tipo, tamaño, unidad)
+
+    elif num == "2":
+        categoria = "Salchicha"
+        nombre = input("Indique el nombre de la salchicha: ")
+        tipo = input("Indique el tipo de salchicha (ej: Polaca, Alemana): ")
+        try:
+            tamaño = int(input("Indique el tamaño en números (ej: 15): "))
+        except ValueError:
+            print("Error: El tamaño debe ser un número.")
+            return
+        unidad = input("Indique la unidad de medida (ej: cm): ")
+        nuevo_ingrediente = Salchicha(categoria, nombre, tipo, tamaño, unidad)
+
+    elif num == "3":
+        categoria = "Acompañante"
+        nombre = input("Indique el nombre del acompañante (ej: Papas Fritas): ")
+        tipo = input("Indique el tipo (ej: Bastón): ")
+        try:
+            tamaño = int(input("Indique el tamaño/cantidad (ej: 100): "))
+        except ValueError:
+            print("Error: El tamaño/cantidad debe ser un número.")
+            return
+        unidad = input("Indique la unidad de medida (ej: gr): ")
+        nuevo_ingrediente = Acompañante(categoria, nombre, tipo, tamaño, unidad)
+    
+    elif num == "4":
+        categoria = "Salsa"
+        nombre = input("Indique el nombre de la salsa (ej: Salsa de Tomate): ")
+        base = input("Indique la base (ej: Tomate, Mayonesa): ")
+        color = input("Indique el color (ej: Roja, Blanca): ")
+        nuevo_ingrediente = Salsa(categoria, nombre, base, color)
+
+    elif num == "5":
+        categoria = "Topping"
+        nombre = input("Indique el nombre del topping (ej: Cebolla Caramelizada): ")
+        tipo = input("Indique el tipo (ej: Vegetal, Lácteo): ")
+        presentacion = input("Indique la presentación (ej: Picada, Rallada): ")
+        nuevo_ingrediente = Topping(categoria, nombre, tipo, presentacion)
+    
+    else:
+        print("Opción no válida. No se agregó ningún ingrediente.")
+        return
+
+    if nuevo_ingrediente:
+        # Asignación al diccionario
+        dict_ingredientes[nueva_llave] = nuevo_ingrediente
+        
+        # Guardar los cambios en el archivo
+        guardar_datos_inventario(ingredientes, "inventario.json")
+        print(f"¡Ingrediente '{nombre}' agregado exitosamente con ID {nueva_llave}!")
+        print(nuevo_ingrediente)
+    else:
+        print("No se pudo crear el ingrediente.")
+
+
+
+def eliminar_ingrediente():
+    """
+    Elimina un ingrediente del diccionario en memoria y guarda.
+    Valida si el ingrediente está en uso en el menú de hotdogs
+    y pide confirmación para eliminar los hotdogs afectados.
+    """
+    
+    if not ingredientes:
+        print("Error: No hay datos de ingredientes cargados.")
+        return
+        
+    dict_ingredientes = ingredientes[0] 
+
+    print("Seleccione la categoría del ingrediente a eliminar:")
+    print("1. Pan")
+    print("2. Salchicha")
+    print("3. Acompañante")
+    print("4. Salsa")
+    print("5. Topping")
+    num = input("--> ")
+
+    # Mapeo para evitar código repetido
+    # (Corregí "toppings" a "Topping" para que coincida con tu clase)
+    categoria_map = {
+        "1": "Pan", 
+        "2": "Salchicha", 
+        "3": "Acompañante", 
+        "4": "Salsa", 
+        "5": "Topping"
+    }
+
+    if num not in categoria_map:
+        print("Opción no válida.")
+        return
+
+    categoria_str = categoria_map[num]
+    
+    # Listar solo los de esa categoría
+    print(f"\n--- Ingredientes en '{categoria_str}' ---")
+    encontrados = False
+    for ing in dict_ingredientes.values():
+        if ing.get_categoria() == categoria_str:
+            print(ing) # Usa el __str__ de la clase
+            encontrados = True
+    
+    if not encontrados:
+        print(f"No hay ingredientes registrados en la categoría '{categoria_str}'.")
+        return
+
+    opcion = input(f"\nIndique el nombre exacto del {categoria_str} a eliminar: ")
+
+    #Encontrar la llave y el objeto del ingrediente
+    llave_a_eliminar = None
+    ingrediente_a_eliminar = None
+    
+    for llave, ingrediente in dict_ingredientes.items():
+        # (Esto asume que ya corregiste get_nombre() en ingredientes.py)
+        if ingrediente.get_nombre() == opcion and ingrediente.get_categoria() == categoria_str:
+            llave_a_eliminar = llave
+            ingrediente_a_eliminar = ingrediente
+            
+            break # Encontramos el ingrediente
+    
+    if not ingrediente_a_eliminar:
+        print(f"No se encontró un ingrediente con el nombre '{opcion}' en esta categoría.")
+        return
+
+    # 3. REQUISITO PDF: Validar contra el menú 
+    print(f"Validando si '{opcion}' está en uso en el menú...")
+    menu_data = cargar_datos_menu() # Carga el menú actual
+    hotdogs_afectados = []
+
+    if menu_data:
+        dict_menu = menu_data[0] # Asumiendo la estructura [ { "nombre": HotDog_obj, ... } ]
+        for nombre_hotdog, hotdog_obj in dict_menu.items():
+            # Usamos el método de la clase HotDog para ver sus ingredientes
+            requerimientos = hotdog_obj.obtener_requerimientos()
+            if opcion in requerimientos:
+                hotdogs_afectados.append(nombre_hotdog)
+
+    # 4. Lógica de confirmación y borrado
+    confirmado = False
     if hotdogs_afectados:
-        print("\n⚠️ Advertencia Crítica: Uso del Ingrediente")
-        print(f"El ingrediente '{nombre}' está siendo usado por los siguientes Hot Dogs:")
+        print("="*30)
+        print("  ADVERTENCIA  ")
+        print(f"El ingrediente '{opcion}' es usado por los siguientes Hot Dogs:")
         for hd in hotdogs_afectados:
             print(f"  - {hd}")
+        print("Si elimina el ingrediente, estos Hot Dogs también serán ELIMINADOS del menú.")
         
-        print("\nSi elimina este ingrediente, los Hot Dogs listados arriba serán eliminados del menú.")
-        respuesta = input("¿Desea proceder con la eliminación? (S/N): ").strip().upper()
-        
-        if respuesta != 'S':
-            print(f"🚫 Eliminación de '{nombre}' cancelada por el usuario.")
-            return
-        # Si el usuario confirma, procedemos a eliminar los Hot Dogs
-        for hd_a_eliminar in hotdogs_afectados:
-            gestor_menu.eliminar_hotdog(hd_a_eliminar, gestor_inventario=gestor_inventario) 
-    # Eliminar el ingrediente de la lista maestra
-    del self._ingredientes_maestros[nombre]
-    self.guardar_datos_locales() 
-    print(f"✅ Ingrediente '{nombre}' eliminado correctamente.")"""
+        confirm = input("¿Desea continuar? (s/n): ")
+        if confirm.lower() == 's':
+            # Eliminar los Hot Dogs afectados
+            dict_menu_actualizado = menu_data[0]
+            for nombre_hd in hotdogs_afectados:
+                dict_menu_actualizado.pop(nombre_hd, None) # Borra el hotdog del dict
+            
+            guardar_datos_menu(menu_data) # Guarda el menú modificado
+            print(f"Hot Dogs afectados eliminados del menú.")
+            confirmado = True
+        else:
+            print("Operación cancelada. No se eliminó nada.")
+            return # Salir de la función
+    else:
+        # No está en uso, se puede borrar directamente
+        confirmado = True
+
+    #Eliminar el ingrediente (si se confirmó o si no había conflictos)
+    if confirmado:
+        dict_ingredientes.pop(llave_a_eliminar)
+        guardar_datos_inventario(ingredientes, "inventario.json")
+        print(f"✅ ¡Ingrediente '{opcion}' eliminado exitosamente!")
