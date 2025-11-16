@@ -339,7 +339,7 @@ def inicializar_sistema():
     
     g_stats.cargar_estadisticas(datos_locales["estadisticas"])
 
-    g_simulador = Simulador(g_menu, g_inventario)
+    g_simulador = Simulador(g_menu, g_inventario, g_ingredientes)
     
     print("\n¡Sistema Hot Dog CCS inicializado y listo!")
     return True

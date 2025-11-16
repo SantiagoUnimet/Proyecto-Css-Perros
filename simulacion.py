@@ -6,9 +6,10 @@ import random
 class Simulador:
     """Ejecuta la simulación de un día de ventas."""
     
-    def __init__(self, gestor_menu, gestor_inventario):
+    def __init__(self, gestor_menu, gestor_inventario, gestor_ingredientes):
         self._gestor_menu = gestor_menu
         self._gestor_inventario = gestor_inventario
+        self._gestor_ingredientes = gestor_ingredientes # ¡ESTA LÍNEA ES NUEVA!
 
     def simular_dia(self):
         """Ejecuta la lógica de simulación de un día."""
