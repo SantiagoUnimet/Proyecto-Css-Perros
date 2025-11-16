@@ -37,8 +37,13 @@ class HotDog:
         requerimientos = {}
 
         # 1. Ingredientes Principales (siempre 1 unidad)
-        if self._pan:
-            requerimientos[self._pan.get_nombre()] = requerimientos.get(self._pan.get_nombre(), 0) + 1
+        # --- LÍNEA INCORRECTA ---
+        # if self._acompanante_combo:
+        #     requerimientos[self._acompanante_combo.get_nombre()] = requerimientos.get(self._acompanante_combo.get_nombre(), 0) + 1
+
+        # --- LÍNEA CORRECTA ---
+        if self._acompanante:
+            requerimientos[self._acompanante.get_nombre()] = requerimientos.get(self._acompanante.get_nombre(), 0) + 1
         
         if self._salchicha:
             requerimientos[self._salchicha.get_nombre()] = requerimientos.get(self._salchicha.get_nombre(), 0) + 1
@@ -52,8 +57,8 @@ class HotDog:
             if salsa:
                 requerimientos[salsa.get_nombre()] = requerimientos.get(salsa.get_nombre(), 0) + 1
                 
-        if self._acompanante_combo:
-            requerimientos[self._acompanante_combo.get_nombre()] = requerimientos.get(self._acompanante_combo.get_nombre(), 0) + 1
+        if self._acompanante:
+            requerimientos[self._acompanante.get_nombre()] = requerimientos.get(self._acompanante.get_nombre(), 0) + 1
 
         return requerimientos
 
@@ -62,4 +67,4 @@ class HotDog:
         requerimientos = self.obtener_requerimientos()
         return gestor_inventario.verificar_existencia_para_orden(requerimientos)
     
-    
+    #xd
