@@ -1,0 +1,61 @@
+{
+    "nuevos_ingredientes": [],
+    "nuevos_hotdogs": [],
+    "inventario": {
+        "simple": 187,
+        "weiner": 187,
+        "integral": 88,
+        "breakfast": 88,
+        "cebolla": 279,
+        "relish": 129,
+        "Papas": 87,
+        "grande": 41,
+        "alemana": 41,
+        "repollo": 91,
+        "cilantro": 91,
+        "papitas": 141,
+        "ketchup": 141,
+        "BBQ": 141,
+        "mostaza": 141,
+        "No vendemos alcohol": 41
+    },
+    "estadisticas": [
+        {
+            "total_clientes": 133,
+            "clientes_opinion": 17,
+            "clientes_no_compra": 111,
+            "promedio_hd_cliente": 1.6,
+            "total_acomp_vendidos": 5
+        },
+        {
+            "total_clientes": 157,
+            "clientes_opinion": 28,
+            "clientes_no_compra": 125,
+            "promedio_hd_cliente": 1.75,
+            "total_acomp_vendidos": 3
+        },
+        {
+            "total_clientes": 196,
+            "clientes_opinion": 24,
+            "clientes_no_compra": 164,
+            "promedio_hd_cliente": 1.25,
+            "total_acomp_vendidos": 7
+        },
+        {
+            "total_clientes": 169,
+            "clientes_opinion": 21,
+            "clientes_no_compra": 142,
+            "promedio_hd_cliente": 1.0,
+            "total_acomp_vendidos": 5
+        },
+        {
+            "total_clientes": 72,
+            "clientes_opinion": 16,
+            "clientes_no_compra": 53,
+            "promedio_hd_cliente": 1.0,
+            "total_acomp_vendidos": 2
+        }
+    ],
+    "api_ingredientes_eliminados": [],
+    "api_hotdogs_eliminados": []
+}

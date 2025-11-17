@@ -1,17 +1,11 @@
 # ----------------------------------------------------------------------
 # Módulo de Utilidades
 # ----------------------------------------------------------------------
+
 import requests
 import json
 import os
-from ingredientes import * # Importamos todas las clases de ingredientes
-
-# URLs de la API de GitHub (¡Corregidas!)
-URL_INGREDIENTES = "https://raw.githubusercontent.com/FernandoSapient/BPTSP05_2526-1/refs/heads/main/ingredientes.json"
-URL_MENU = "https://raw.githubusercontent.com/FernandoSapient/BPTSP05_2526-1/refs/heads/main/menu.json"
-
-# Archivo local
-ARCHIVO_LOCAL = "hotdog_ccs_local.json"
+from ingredientes import *
 
 def validar_input_numerico(prompt, tipo_dato=int, rango=None):
     """
@@ -33,6 +27,7 @@ def validar_input_numerico(prompt, tipo_dato=int, rango=None):
         except Exception as e:
             print(f"Error inesperado: {e}")
 
+
 def validar_confirmacion(prompt):
     """Pide una confirmación (S/N) al usuario."""
     while True:
@@ -43,30 +38,28 @@ def validar_confirmacion(prompt):
             return False
         print("Respuesta no válida. Por favor, ingrese S o N.")
 
-def descargar_datos_api():
+
+def descargar_datos_api(url_ingredientes, url_menu):
     """
     Descarga los JSON de ingredientes y menú de la API de GitHub.
     Retorna diccionarios con los datos o None si falla.
     """
     print("Descargando datos desde la API de GitHub...")
-    
+
+
     def fetch_json(url):
         """Función auxiliar para descargar y parsear un JSON."""
         try:
             response = requests.get(url, timeout=10) 
-            response.raise_for_status() # Lanza error si es 404, 500, etc.
+            response.raise_for_status()
             return response.json()
-
         except requests.exceptions.HTTPError as e:
             print(f"\n--- ERROR HTTP al descargar {url} ---")
             print(f"Código de error: {e.response.status_code}")
-            if e.response.status_code == 404:
-                print("Diagnóstico: ERROR 404: Archivo no encontrado.")
             return None
         except requests.exceptions.ConnectionError as e:
             print(f"\n--- Error de Conexión al descargar {url} ---")
             print("Diagnóstico: No se pudo conectar a GitHub.")
-            print("Verifica tu conexión a internet o firewall.")
             return None
         except requests.exceptions.Timeout:
             print(f"\n--- Error de Timeout al descargar {url} ---")
@@ -76,49 +69,40 @@ def descargar_datos_api():
             print(f"Error: {e}")
             print(f"Contenido (primeros 100 caracteres): {response.text[:100]}...")
             return None
-
-    # --- Fin de la función auxiliar ---
-
-    ingredientes_api = fetch_json(URL_INGREDIENTES)
-    menu_api = fetch_json(URL_MENU)
-
-    # Si alguno falló, no podemos continuar
+    ingredientes_api = fetch_json(url_ingredientes)
+    menu_api = fetch_json(url_menu)
     if not all([ingredientes_api, menu_api]):
         print("\nError fatal: No se pudieron descargar todos los datos base de la API.")
         return None, None
-
     print("Datos de la API (Ingredientes y Menú) descargados exitosamente.")
     return ingredientes_api, menu_api
 
-def cargar_datos_locales():
+
+def cargar_datos_locales(archivo_local):
     """Carga los datos del archivo JSON local si existe."""
-    if not os.path.exists(ARCHIVO_LOCAL):
-        print(f"No se encontró el archivo local '{ARCHIVO_LOCAL}'. Se creará uno nuevo al salir.")
+    if not os.path.exists(archivo_local):
+        print(f"No se encontró el archivo local '{archivo_local}'. Se creará uno nuevo al salir.")
         return {
             "nuevos_ingredientes": [], 
             "nuevos_hotdogs": [], 
             "inventario": None, 
             "estadisticas": [],
-            "api_ingredientes_eliminados": [], # NUEVO
-            "api_hotdogs_eliminados": []      # NUEVO
+            "api_ingredientes_eliminados": [],
+            "api_hotdogs_eliminados": []
         }
-    
     try:
-        with open(ARCHIVO_LOCAL, 'r', encoding='utf-8') as f:
+        with open(archivo_local, 'r', encoding='utf-8') as f:
             datos = json.load(f)
-            print(f"Datos locales de '{ARCHIVO_LOCAL}' cargados.")
-            
-            # Asegurarse que las llaves principales existan
+            print(f"Datos locales de '{archivo_local}' cargados.")
             datos.setdefault("nuevos_ingredientes", [])
             datos.setdefault("nuevos_hotdogs", [])
             datos.setdefault("inventario", None)
             datos.setdefault("estadisticas", [])
-            datos.setdefault("api_ingredientes_eliminados", []) # NUEVO
-            datos.setdefault("api_hotdogs_eliminados", [])      # NUEVO
+            datos.setdefault("api_ingredientes_eliminados", [])
+            datos.setdefault("api_hotdogs_eliminados", [])
             return datos
-            
     except Exception as e:
-        print(f"Error al cargar '{ARCHIVO_LOCAL}': {e}. Se usarán datos vacíos.")
+        print(f"Error al cargar '{archivo_local}': {e}. Se usarán datos vacíos.")
         return {
             "nuevos_ingredientes": [], 
             "nuevos_hotdogs": [], 
@@ -128,16 +112,16 @@ def cargar_datos_locales():
             "api_hotdogs_eliminados": []
         }
 
-def guardar_datos_locales(datos_a_guardar):
+
+def guardar_datos_locales(datos_a_guardar, archivo_local):
     """Guarda el estado actual (nuevos items, inventario) en el JSON local."""
     try:
-        with open(ARCHIVO_LOCAL, 'w', encoding='utf-8') as f:
+        with open(archivo_local, 'w', encoding='utf-8') as f:
             json.dump(datos_a_guardar, f, indent=4)
-        print(f"Datos guardados exitosamente en '{ARCHIVO_LOCAL}'.")
+        print(f"Datos guardados exitosamente en '{archivo_local}'.")
     except Exception as e:
         print(f"Error al guardar datos locales: {e}")
 
-# --- Fábrica (Factory) para crear objetos ---
 
 def crear_ingrediente_desde_dict(data):
     """
@@ -145,13 +129,11 @@ def crear_ingrediente_desde_dict(data):
     a partir de un diccionario.
     """
     try:
-        # 'categoria' ahora es agregada por GestorIngredientes
         tipo_clase = data.get("clase", data.get("categoria"))
         
         if tipo_clase is None:
             print(f"Error al crear ingrediente (JSON): Datos vacíos o sin categoría. Datos: {str(data)[:50]}")
             return None
-
         if tipo_clase == "Pan":
             return Pan(data['categoria'], data['nombre'], data['tipo'], data['tamaño'], data['unidad'])
         elif tipo_clase == "Salchicha":
@@ -161,17 +143,14 @@ def crear_ingrediente_desde_dict(data):
         elif tipo_clase == "Salsa":
             return Salsa(data['categoria'], data['nombre'], data['base'], data['color'])
         elif tipo_clase == "Topping":
-            # --- ¡CORRECCIÓN CLAVE! ---
-            # La API usa "presentación" con acento
             return Topping(data['categoria'], data['nombre'], data['tipo'], data['presentación'])
         else:
             print(f"Error al crear ingrediente (JSON): Categoría '{tipo_clase}' desconocida.")
             return None
-    
     except KeyError as e:
-        # Esto captura si falta 'nombre', 'tipo', 'tamaño', 'presentación', etc.
         print(f"Error al crear ingrediente '{data.get('nombre', '???')}' (JSON): Datos incompletos. Falta la llave {e}.")
         return None
+
 
 def validar_input_texto(prompt):
     """Valida que la entrada de texto del usuario no esté vacía."""
@@ -185,3 +164,4 @@ def validar_input_texto(prompt):
         except EOFError:
             print("Entrada cancelada.")
             return None
+
