@@ -53,21 +53,8 @@ class HotDog:
         para preparar una unidad de este Hot Dog. Retorna: {nombre_ingrediente: cantidad}
         """
         requerimientos = {}
-<<<<<<< HEAD
         if self._pan:
             requerimientos[self._pan.get_nombre()] = requerimientos.get(self._pan.get_nombre(), 0) + 1
-=======
-
-        # 1. Ingredientes Principales (siempre 1 unidad)
-        # --- LÍNEA INCORRECTA ---
-        # if self._acompanante_combo:
-        #     requerimientos[self._acompanante_combo.get_nombre()] = requerimientos.get(self._acompanante_combo.get_nombre(), 0) + 1
-
-        # --- LÍNEA CORRECTA ---
-        if self._acompanante:
-            requerimientos[self._acompanante.get_nombre()] = requerimientos.get(self._acompanante.get_nombre(), 0) + 1
-        
->>>>>>> 17bcfc36674e1f7fb47125480126dec301ef5cf6
         if self._salchicha:
             requerimientos[self._salchicha.get_nombre()] = requerimientos.get(self._salchicha.get_nombre(), 0) + 1
         for topping in self._toppings:
@@ -76,27 +63,13 @@ class HotDog:
         for salsa in self._salsas:
             if salsa:
                 requerimientos[salsa.get_nombre()] = requerimientos.get(salsa.get_nombre(), 0) + 1
-<<<<<<< HEAD
         if self._acompanante:
             requerimientos[self._acompanante.get_nombre()] = requerimientos.get(self._acompanante.get_nombre(), 0) + 1
-=======
-                
-        if self._acompanante:
-            requerimientos[self._acompanante.get_nombre()] = requerimientos.get(self._acompanante.get_nombre(), 0) + 1
-
->>>>>>> 17bcfc36674e1f7fb47125480126dec301ef5cf6
         return requerimientos
 
 
     def validar_inventario(self, gestor_inventario):
         """Verifica si hay inventario suficiente para preparar este HotDog."""
         requerimientos = self.obtener_requerimientos()
-<<<<<<< HEAD
         puede_preparar, _ = gestor_inventario.verificar_existencia_para_orden(requerimientos)
         return puede_preparar
-    
-=======
-        return gestor_inventario.verificar_existencia_para_orden(requerimientos)
-    
-    #xd
->>>>>>> 17bcfc36674e1f7fb47125480126dec301ef5cf6
